@@ -219,11 +219,16 @@ class SupplierBase(BaseModel):
 
     @validator("contact_name")
     def validate_contact_name(cls, value):
-        # Проверка на наличие букв и цифр
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]{1,100}$"
-        if not re.match(pattern, value):
+
+        if not value.strip():
             raise ValueError(
-                "Contact name must contain only letters, digits, and spaces, and be up to 100 characters long.")
+                "Contact name cannot be empty or contain only spaces.")
+
+        # Проверяем на пробелы в начале или конце
+        if value != value.strip():
+            raise ValueError(
+                "Contact name cannot have leading or trailing spaces.")
+
         return value
 
     @validator("contact_email")
@@ -324,13 +329,15 @@ class SupplierUpdate(BaseModel):
 
     @validator("contact_name")
     def validate_contact_name(cls, value):
-        if value is None:
-            return value
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
-        if not re.match(pattern, value):
+        if not value.strip():
             raise ValueError(
-                "Contact name must contain only letters, digits, and spaces."
-            )
+                "Contact name cannot be empty or contain only spaces.")
+
+        # Проверяем на пробелы в начале или конце
+        if value != value.strip():
+            raise ValueError(
+                "Contact name cannot have leading or trailing spaces.")
+
         return value
 
     @validator("contact_email")
