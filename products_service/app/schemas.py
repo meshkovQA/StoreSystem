@@ -62,13 +62,17 @@ class ProductBase(BaseModel):
 
     @validator("price")
     def validate_price(cls, value):
+
+        # Проверяем, что цена больше 0
+        if value <= 0:
+            raise ValueError("Price must be greater than 0.")
+
+        # Проверяем, что цена не превышает максимум 9999999.99
+        if value > 9999999.99:
+            raise ValueError("Price must not exceed 9999999.99.")
         # Проверяем, что значение имеет ровно 2 знака после запятой
         if value.as_tuple().exponent != -2:
             raise ValueError("Price must have exactly two decimal places.")
-        # Проверяем, что количество цифр не превышает 10
-        if len(str(value).replace(".", "")) > 10:
-            raise ValueError(
-                "Price must not exceed 10 digits including decimal places.")
         return value
 
     @validator("stock_quantity")
