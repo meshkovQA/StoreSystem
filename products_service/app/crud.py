@@ -145,7 +145,10 @@ def delete_product(db: Session, product_id: str):
 
 
 def search_products_by_name(db: Session, name: str):
-    return db.query(models.Product).filter(models.Product.name.ilike(f"%{name}%")).all()
+    return db.query(models.Product).filter(
+        models.Product.name.ilike(f"%{name}%"),
+        models.Product.is_available == True
+    ).all()
 
 # ---- CRUD операции для поставщиков (Suppliers) ----
 
@@ -198,6 +201,22 @@ def patch_supplier(db: Session, supplier_id: str, updates: dict):
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
+
+        # Проверяем уникальность названия, если оно обновляется
+        if 'name' in updates and updates['name'] is not None:
+            new_name = updates['name'].strip()  # Убираем лишние пробелы
+
+            # Проверяем, существует ли поставщик с таким названием (исключая текущего)
+            existing_supplier = db.query(models.Supplier).filter(
+                models.Supplier.name == new_name,
+                models.Supplier.supplier_id != supplier_id
+            ).first()
+
+            if existing_supplier:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Supplier with name '{new_name}' already exists"
+                )
 
         # Обновляем только те поля, которые переданы в словаре updates
         for key, value in updates.items():
@@ -355,6 +374,13 @@ def add_product_to_warehouse(db: Session, product_id: str, warehouse_id: str, qu
             models.Product.product_id == product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
+
+        # Проверка одобренности товара (is_available должен быть True)
+        if not product.is_available:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot add unapproved product to warehouse. Product must be available"
+            )
 
         # Проверка существования склада
         warehouse = db.query(models.Warehouse).filter(
