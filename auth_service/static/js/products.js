@@ -50,8 +50,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         let price = document.getElementById("add-price").value.trim();
         price = price.replace(',', '.'); // Заменяем запятую на точку
 
-        if (!price || isNaN(price) || parseFloat(price) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
-            console.log("Invalid price input");  // Лог ошибки цены
+        if (!price ||
+            isNaN(price) ||
+            parseFloat(price) <= 0 ||
+            parseFloat(price) > 9999999.99) {
+
             document.getElementById("priceError").style.display = 'block';
             valid = false;
         }
@@ -148,8 +151,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         let price = document.getElementById("edit-price").value.trim();
         price = price.replace(',', '.'); // Заменяем запятую на точку
 
-        if (!price || isNaN(price) || parseFloat(price) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
-            console.log("Invalid price input");  // Лог ошибки цены
+        if (!price ||
+            isNaN(price) ||
+            parseFloat(price) <= 0 ||
+            parseFloat(price) > 9999999.99) {
+
             document.getElementById("editpriceError").style.display = 'block';
             valid = false;
         }
