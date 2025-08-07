@@ -41,7 +41,7 @@ class JsonFormatter(logging.Formatter):
             "timestamp": int(datetime.utcnow().timestamp() * 1000),
             "message": record.getMessage(),  # добавляем текст сообщения
             "ip_address": get_ip_address(),  # добавляем IP-адрес
-            "microservice": "products_service"
+            "microservice": "orders_service"
         }
         return json.dumps(log_entry)
 
