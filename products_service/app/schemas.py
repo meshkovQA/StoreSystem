@@ -295,8 +295,47 @@ class SupplierBase(BaseModel):
     @validator("website")
     def validate_website(cls, value):
         if value is not None:
-            # Проверка URL уже обеспечена HttpUrl, поэтому дополнительная проверка не требуется.
-            return value
+            host = value.host
+
+            # Проверяем на пустой хост или хост состоящий только из точек
+            if not host or host.replace('.', '') == '':
+                raise ValueError(
+                    'Domain name cannot be empty or contain only dots')
+
+            # Проверяем, что домен не начинается с точки
+            if host.startswith('.'):
+                raise ValueError('Domain name cannot start with a dot')
+
+            # Проверяем, что домен не заканчивается точкой
+            if host.endswith('.'):
+                raise ValueError('Domain name cannot end with a dot')
+
+            # Проверяем на consecutive dots
+            if '..' in host:
+                raise ValueError('Domain name cannot contain consecutive dots')
+
+            # Проверяем, что домен содержит хотя бы одну точку (есть TLD)
+            if '.' not in host:
+                raise ValueError('Domain name must contain at least one dot')
+
+            # Разбиваем на части и проверяем каждую
+            parts = host.split('.')
+
+            # Проверяем, что нет пустых частей
+            if any(part == '' for part in parts):
+                raise ValueError('Domain name parts cannot be empty')
+
+            # Проверяем минимальную длину TLD
+            tld = parts[-1]
+            if len(tld) < 2:
+                raise ValueError('TLD must contain at least 2 characters')
+
+            # Проверяем, что есть хотя бы одна часть перед TLD
+            if len(parts) < 2:
+                raise ValueError(
+                    'Domain name must have at least subdomain and TLD')
+
+        return value
 
 
 class SupplierCreate(SupplierBase):
