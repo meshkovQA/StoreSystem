@@ -52,13 +52,29 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     document.getElementById("searchForm").addEventListener("submit", async (event) => {
         event.preventDefault();
+
         const warehouseId = document.getElementById("warehouseSelect").value;
         const searchQuery = document.getElementById("searchInput").value.trim();
-        if (warehouseId && searchQuery) {
-            resetFilters();
-            const products = await searchProductsInWarehouse(warehouseId, searchQuery, token);
-            renderProducts(products);
+        const token = await getTokenFromDatabase();
+
+        if (!warehouseId) {
+            console.warn("Не выбран склад");
+            return;
         }
+
+        // Всегда сбрасываем фильтры при нажатии "Найти"
+        resetFilters();
+
+        let result;
+        if (searchQuery === "") {
+            // Пустой поиск → показать весь список товаров на складе
+            result = await fetchProductsFromWarehouse(warehouseId, token);
+        } else {
+            // Непустой поиск → искать по имени
+            result = await searchProductsInWarehouse(warehouseId, searchQuery, token);
+        }
+
+        renderProducts(result);
     });
 
     document.getElementById("filtersForm").addEventListener("submit", async (event) => {
@@ -337,10 +353,10 @@ function renderCartIndicator() {
 function resetFilters() {
     console.log("Сбрасываем фильтры...");
     document.getElementById("minPriceRange").value = 0;
-    document.getElementById("maxPriceRange").value = 10000;
+    document.getElementById("maxPriceRange").value = 10000000;
     document.getElementById("inStockCheckbox").checked = false;
     document.getElementById("minPriceValue").textContent = "0";
-    document.getElementById("maxPriceValue").textContent = "10000";
+    document.getElementById("maxPriceValue").textContent = "10000000";
 }
 
 // ---- Получение информации о поставщике ----

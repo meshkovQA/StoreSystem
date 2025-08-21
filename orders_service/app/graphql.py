@@ -242,7 +242,8 @@ class Mutation:
                 {
                     "product_id": str(item.product_id),
                     "warehouse_id": str(item.warehouse_id),
-                    "quantity": item.quantity
+                    "quantity": item.quantity,
+                    "price_at_order": str(item.price_at_order)
                 }
                 for item in new_order.order_items
             ],

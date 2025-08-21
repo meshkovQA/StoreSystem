@@ -2,8 +2,9 @@ import json
 from kafka import KafkaProducer, KafkaConsumer
 from app import logger
 from threading import Thread
+from sqlalchemy import func
 from app.database import SessionLocal
-from app.models import ProductWarehouse
+from app.models import ProductWarehouse, Product, Warehouse
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -68,58 +69,137 @@ def handle_order_created(message: dict):
     order_id = message.get('order_id')
     order_items = message.get('order_items', [])
     db: Session = SessionLocal()
+
     insufficient_stock = []
+    price_mismatches = []
+
     try:
+        # === ШАГ 1. Валидация цен и доступности (без изменений остатков) ===
         for item in order_items:
             product_id = item['product_id']
             quantity = item['quantity']
             warehouse_id = item['warehouse_id']
-            product_warehouse = db.query(ProductWarehouse).filter(
-                ProductWarehouse.product_id == product_id,
-                ProductWarehouse.warehouse_id == warehouse_id
-            ).with_for_update().first()
-            if product_warehouse:
-                if product_warehouse.quantity >= quantity:
-                    # Резервируем товар (уменьшаем stock_quantity)
-                    product_warehouse.quantity -= quantity
-                    db.add(product_warehouse)
-                else:
-                    insufficient_stock.append(
-                        {
-                            'product_id': product_id,
-                            'warehouse_id': warehouse_id,
-                            'available_quantity': product_warehouse.quantity
-                        })
+
+            # 1.a проверка цены (строгое равенство float)
+            price_at_order_raw = item.get('price_at_order')
+            if price_at_order_raw is None:
+                price_mismatches.append({
+                    'product_id': product_id,
+                    'warehouse_id': warehouse_id,
+                    'reason': 'price_at_order is missing'
+                })
             else:
-                insufficient_stock.append(
-                    {
+                try:
+                    price_at_order = float(price_at_order_raw)
+                except (TypeError, ValueError):
+                    price_mismatches.append({
                         'product_id': product_id,
                         'warehouse_id': warehouse_id,
-                        'reason': 'Product not found in warehouse'
+                        'reason': f'invalid price_at_order: {price_at_order_raw}'
                     })
-        if insufficient_stock:
+                else:
+                    product = db.query(Product).filter(
+                        Product.product_id == product_id
+                    ).first()
+                    if not product:
+                        price_mismatches.append({
+                            'product_id': product_id,
+                            'warehouse_id': warehouse_id,
+                            'reason': 'product not found'
+                        })
+                    else:
+                        current_price = float(product.price)
+                        if price_at_order != current_price:
+                            price_mismatches.append({
+                                'product_id': product_id,
+                                'warehouse_id': warehouse_id,
+                                'expected_price': current_price,
+                                'got_price_at_order': price_at_order
+                            })
+
+            # 1.b проверка наличия на складе (без списания)
+            pw = db.query(ProductWarehouse).filter(
+                ProductWarehouse.product_id == product_id,
+                ProductWarehouse.warehouse_id == warehouse_id
+            ).with_for_update().first()  # блокируем строку под резерв
+            if pw:
+                if pw.quantity < quantity:
+                    insufficient_stock.append({
+                        'product_id': product_id,
+                        'warehouse_id': warehouse_id,
+                        'available_quantity': pw.quantity
+                    })
+            else:
+                insufficient_stock.append({
+                    'product_id': product_id,
+                    'warehouse_id': warehouse_id,
+                    'reason': 'Product not found in warehouse'
+                })
+
+        if price_mismatches or insufficient_stock:
             db.rollback()
-            # Отправляем событие OrderRejected
+            reason = {}
+            if price_mismatches:
+                reason['price_mismatch'] = price_mismatches
+            if insufficient_stock:
+                reason['insufficient_stock'] = insufficient_stock
+
             order_rejected_event = {
                 "event_type": "OrderRejected",
                 "order_id": order_id,
-                "reason": f"Insufficient stock for products: {insufficient_stock}",
+                "reason": reason,
                 "timestamp": datetime.utcnow().isoformat()
             }
             send_to_kafka('order_responses', order_rejected_event)
-            logger.log_message(
-                f"Заказ {order_id} отклонен из-за недостатка на складе: {insufficient_stock}")
-        else:
-            db.commit()
-            # Отправляем событие OrderConfirmed
-            order_confirmed_event = {
-                "event_type": "OrderConfirmed",
-                "order_id": order_id,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            send_to_kafka('order_responses', order_confirmed_event)
-            logger.log_message(
-                f"Заказ {order_id} подтвержден и товары зарезервированы.")
+            logger.log_message(f"Заказ {order_id} отклонён. Причины: {reason}")
+            return
+
+        # === ШАГ 2. Резервирование остатков ===
+        for item in order_items:
+            product_id = item['product_id']
+            quantity = item['quantity']
+            warehouse_id = item['warehouse_id']
+
+            pw = db.query(ProductWarehouse).filter(
+                ProductWarehouse.product_id == product_id,
+                ProductWarehouse.warehouse_id == warehouse_id
+            ).with_for_update().first()
+            # на этом этапе pw точно есть и qty достаточно
+            pw.quantity -= quantity
+            db.add(pw)
+
+        # === ШАГ 3. Пересчёт current_stock по каждому складу ===
+        # Собираем уникальные склады из заказа
+        affected_warehouses = {item['warehouse_id'] for item in order_items}
+
+        for wid in affected_warehouses:
+            # Лочим склад на время пересчёта
+            wh = db.query(Warehouse).filter(
+                Warehouse.warehouse_id == wid
+            ).with_for_update().first()
+
+            # Сумма всех остатков по складу
+            total_qty = db.query(
+                func.coalesce(func.sum(ProductWarehouse.quantity), 0)
+            ).filter(
+                ProductWarehouse.warehouse_id == wid
+            ).scalar()
+
+            wh.current_stock = int(total_qty)
+            db.add(wh)
+
+        db.commit()
+
+        order_confirmed_event = {
+            "event_type": "OrderConfirmed",
+            "order_id": order_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        send_to_kafka('order_responses', order_confirmed_event)
+        logger.log_message(
+            f"Заказ {order_id} подтверждён, товары зарезервированы, current_stock пересчитан."
+        )
+
     except SQLAlchemyError as e:
         db.rollback()
         logger.log_message(f"Ошибка при обработке заказа {order_id}: {e}")
