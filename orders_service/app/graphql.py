@@ -82,25 +82,31 @@ def get_db_session(info: Info) -> Session:
         raise Exception("Session не найден в контексте")
 
 
-def get_current_user_id(info: Info, require_admin: bool = False) -> UUID:
+def get_current_user_id(info: Info, require_admin: bool = False) -> tuple[UUID, bool]:
     request = info.context.get("request")
     if not request:
         raise Exception("Request не найден в контексте")
+
     # Извлекаем токен из заголовка Authorization
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Отсутствует заголовок Authorization")
+
     scheme, _, token = auth_header.partition(" ")
     if scheme.lower() != "bearer" or not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Недопустимая схема аутентификации")
+
     # Проверяем токен
     user_data = auth.verify_token_in_other_service(
         token, require_admin=require_admin)
-    # Получаем user_id из возвращенного словаря
+
+    # Получаем user_id и is_admin из возвращенного словаря
     user_id = user_data.get("user_id")
-    return UUID(user_id)
+    is_admin = user_data.get("is_superadmin", False)
+
+    return UUID(user_id), is_admin
 
 
 @strawberry.type
@@ -273,13 +279,16 @@ class Mutation:
     @strawberry.mutation
     def update_order_status(self, info: Info, input: UpdateOrderStatusInput) -> OrderType:
         db = get_db_session(info)
-        user_id = get_current_user_id(info)
+        user_id, is_admin = get_current_user_id(
+            info)  # Получаем и user_id, и is_admin
+
         order = get_order_by_id_crud(db, input.order_id)
         if not order:
             raise Exception("Заказ не найден")
 
         # Проверяем, имеет ли пользователь право обновлять этот заказ
-        if order.user_id != user_id:
+        # Админ может обновлять любые заказы!
+        if order.user_id != user_id and not is_admin:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для обновления этого заказа")
 
@@ -290,20 +299,24 @@ class Mutation:
                 detail="Cannot cancel this order"
             )
 
-        # Проверяем допустимость обновления статуса
-        if input.status != GQOrderStatus.cancelled:
+        # Администраторы могут изменять статус на любой, обычные пользователи - только на cancelled
+        if not is_admin and input.status != GQOrderStatus.cancelled:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Недопустимое изменение статуса")
-        updated_order = update_order_status_crud(
-            db, input.order_id, OrderStatus.cancelled)
 
-        # Отправляем событие OrderCancelled в Kafka
-        order_cancelled_event = {
-            "event_type": "OrderCancelled",
+        # Преобразуем GQOrderStatus в OrderStatus
+        new_status = OrderStatus[input.status.value]
+        updated_order = update_order_status_crud(
+            db, input.order_id, new_status)
+
+        # Отправляем событие в Kafka
+        order_event = {
+            "event_type": f"Order{input.status.value.capitalize()}",
             "order_id": str(input.order_id),
             "timestamp": datetime.utcnow().isoformat()
         }
-        send_to_kafka('orders', order_cancelled_event)
+        send_to_kafka('orders', order_event)
+
         return OrderType(
             order_id=updated_order.order_id,
             user_id=updated_order.user_id,

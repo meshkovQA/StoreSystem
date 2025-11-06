@@ -126,13 +126,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         const newStatus = document.getElementById(`status-${orderId}`).value;
 
         const query = `
-            mutation {
-                updateOrderStatus(input: { orderId: "${orderId}", status: ${newStatus} }) {
-                    orderId
-                    status
-                }
+        mutation {
+            updateOrderStatus(input: { orderId: "${orderId}", status: ${newStatus} }) {
+                orderId
+                status
             }
-        `;
+        }
+    `;
 
         try {
             const response = await fetch("http://localhost:8003/graphql", {
@@ -147,6 +147,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             const result = await response.json();
 
             if (result.errors) {
+                console.error("Ошибка GraphQL:", result.errors);
                 alert("Ошибка при изменении статуса: " + result.errors[0].message);
             } else {
                 alert("Статус заказа обновлён!");

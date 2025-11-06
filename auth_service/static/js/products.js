@@ -77,10 +77,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // Вес продукта
         let weight = document.getElementById("add-weight").value;
-        weight = weight.replace(',', '.'); // Заменяем запятую на точку
-        if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0) {
-            document.getElementById("weightError").style.display = 'block';
-            valid = false;
+        if (weight) {
+            weight = weight.replace(',', '.'); // Заменяем запятую на точку
+            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0) {
+                document.getElementById("weightError").style.display = 'block';
+                valid = false;
+            }
         }
 
         // Габариты
@@ -97,6 +99,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
         // Производитель
         let manufacturer = document.getElementById("add-manufacturer").value.trim();
+
         if (manufacturer && (!/^[а-яА-Яa-zA-Z0-9]{1,100}$/.test(manufacturer))) {
             console.log("Invalid manufacturer input");  // Лог ошибки производителя
             document.getElementById("manufacturerError").style.display = 'block';
@@ -175,10 +178,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // Вес продукта
         let weight = document.getElementById("edit-weight").value;
-        weight = weight.replace(',', '.'); // Заменяем запятую на точку
-        if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0) {
-            document.getElementById("editweightError").style.display = 'block';
-            valid = false;
+        if (weight) {
+            weight = weight.replace(',', '.'); // Заменяем запятую на точку
+            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0) {
+                document.getElementById("editweightError").style.display = 'block';
+                valid = false;
+            }
         }
 
         // Габариты
