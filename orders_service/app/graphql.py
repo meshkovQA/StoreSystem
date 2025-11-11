@@ -114,28 +114,9 @@ class Query:
     @strawberry.field
     def get_order(self, info: Info, order_id: UUID) -> OrderType:
         db = get_db_session(info)
+        user_id, is_superadmin = get_current_user_id(info)
+
         order = get_order_by_id_crud(db, order_id)
-
-        # Получаем user_id из контекста
-        request = info.context.get("request")
-        if not request:
-            raise Exception("Request не найден в контексте")
-
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Отсутствует заголовок Authorization")
-
-        scheme, _, token = auth_header.partition(" ")
-        if scheme.lower() != "bearer" or not token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Недопустимая схема аутентификации")
-
-            # Предположим, что verify_token_in_other_service вернет словарь,
-        # в котором есть ключи "user_id" и "is_superadmin"
-        user_data = auth.verify_token_in_other_service(token)
-        user_id = UUID(user_data.get("user_id"))
-        is_superadmin = user_data.get("is_superadmin", False)
 
         if not order:
             raise Exception("Заказ не найден")
@@ -144,6 +125,7 @@ class Query:
         if not is_superadmin and order.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для просмотра этого заказа")
+
         return OrderType(
             order_id=order.order_id,
             user_id=order.user_id,
@@ -166,7 +148,7 @@ class Query:
     @strawberry.field
     def list_orders(self, info: Info) -> List[OrderType]:
         db = get_db_session(info)
-        user_id = get_current_user_id(info)
+        user_id, _ = get_current_user_id(info)  # ИСПРАВЛЕНО
         orders = get_orders_by_user_id(db, user_id)
         return [
             OrderType(
@@ -193,7 +175,8 @@ class Query:
     @strawberry.field
     def list_all_orders(self, info: Info) -> List[OrderType]:
         db = get_db_session(info)
-        user_id = get_current_user_id(info, require_admin=True)
+        user_id, _ = get_current_user_id(
+            info, require_admin=True)  # ИСПРАВЛЕНО
         orders = get_all_orders_crud(db)
         return [
             OrderType(
@@ -223,8 +206,9 @@ class Mutation:
     @strawberry.mutation
     def create_order(self, info: Info, input: CreateOrderInput) -> OrderType:
         db = get_db_session(info)
-        user_id = get_current_user_id(info)
+        user_id, _ = get_current_user_id(info)  # ИСПРАВЛЕНО
         logger.log_message(f"User {user_id} is creating a new order")
+
         # Используем функцию из crud.py
         order_data = OrderCreate(
             user_id=user_id,
@@ -239,6 +223,7 @@ class Mutation:
             ]
         )
         new_order = create_order_crud(db, order_data)
+
         # Отправляем событие OrderCreated в Kafka
         order_created_event = {
             "event_type": "OrderCreated",
@@ -256,6 +241,7 @@ class Mutation:
             "timestamp": datetime.utcnow().isoformat()
         }
         send_to_kafka('orders', order_created_event)
+
         # Возвращаем данные заказа
         return OrderType(
             order_id=new_order.order_id,
@@ -279,15 +265,13 @@ class Mutation:
     @strawberry.mutation
     def update_order_status(self, info: Info, input: UpdateOrderStatusInput) -> OrderType:
         db = get_db_session(info)
-        user_id, is_admin = get_current_user_id(
-            info)  # Получаем и user_id, и is_admin
+        user_id, is_admin = get_current_user_id(info)  # ИСПРАВЛЕНО
 
         order = get_order_by_id_crud(db, input.order_id)
         if not order:
             raise Exception("Заказ не найден")
 
         # Проверяем, имеет ли пользователь право обновлять этот заказ
-        # Админ может обновлять любые заказы!
         if order.user_id != user_id and not is_admin:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для обновления этого заказа")
