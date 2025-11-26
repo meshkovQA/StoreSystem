@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Город
         let city = document.getElementById("add-city").value.trim();
         if (city) {
-            const cityRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            const cityRegex = /^[A-Za-zА-Яа-я\s-]{1,50}$/;
             if (city.length > 50 || !cityRegex.test(city)) {
                 document.getElementById("addCityError").style.display = 'block';
                 valid = false;
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Город
         let city = document.getElementById("edit-city").value.trim();
         if (city) {
-            const cityRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            const cityRegex = /^[A-Za-zА-Яа-я\s-]{1,50}$/;
             if (city.length > 50 || !cityRegex.test(city)) {
                 document.getElementById("editCityError").style.display = 'block';
                 valid = false;
@@ -357,18 +357,33 @@ async function updateSupplier(supplierId) {
         website: document.getElementById("edit-website").value.trim() || null,
     };
 
-    await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(supplierData)
-    });
+    try {
+        const response = await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(supplierData)
+        });
 
-    // Закрываем модальное окно и обновляем список поставщиков
-    $("#editSupplierModal").modal("hide");
-    loadSuppliers(token);
+        if (response.ok) {
+            // Закрываем модальное окно и обновляем список поставщиков
+            $("#editSupplierModal").modal("hide");
+            await loadSuppliers(token);
+            showNotification("Поставщик успешно обновлен!");
+        } else {
+            const errorData = await response.json();
+            let errorMessage = "Ошибка при обновлении поставщика";
+            if (errorData.detail) {
+                errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+            }
+            showNotification(errorMessage, "danger", 5000);
+        }
+    } catch (error) {
+        console.error("Ошибка при выполнении запроса:", error);
+        showNotification("Ошибка при обновлении поставщика", "danger");
+    }
 }
 
 //Удаление поставщика
