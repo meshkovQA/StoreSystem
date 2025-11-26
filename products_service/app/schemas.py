@@ -241,20 +241,27 @@ class SupplierBase(BaseModel):
 
     @validator("name")
     def validate_name(cls, value):
-        # Проверка длины и содержимого: только буквы и цифры
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]{3,100}$"
-        if not re.match(pattern, value):
-            raise ValueError(
-                "Name must contain only letters, digits, and spaces, and be 3-100 characters long.")
+        # Проверяем, что нет пробелов в начале или конце
+        if value != value.strip():
+            raise ValueError("Name cannot have leading or trailing spaces.")
+
+        # Проверяем, что после удаления пробелов строка не пустая
+        if not value.strip():
+            raise ValueError("Name cannot be empty or contain only spaces.")
+
         return value
 
     @validator("contact_name")
     def validate_contact_name(cls, value):
-        # Проверка на наличие букв и цифр
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]{1,100}$"
-        if not re.match(pattern, value):
+
+        if not value.strip():
             raise ValueError(
-                "Contact name must contain only letters, digits, and spaces, and be up to 100 characters long.")
+                "Contact name cannot be empty or contain only spaces.")
+
+        # Проверяем на пробелы в начале или конце
+        if value != value.strip():
+            raise ValueError(
+                "Contact name cannot have leading or trailing spaces.")
         return value
 
     @validator("contact_email")
@@ -338,25 +345,27 @@ class SupplierUpdate(BaseModel):
 
     @validator("name")
     def validate_name(cls, value):
-        # Проверяем только если значение поля не None
-        if value is None:
-            return value
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
-        if not re.match(pattern, value):
-            raise ValueError(
-                "Name must contain only letters, digits, and spaces, and be 1-100 characters long."
-            )
+        # Проверяем, что нет пробелов в начале или конце
+        if value != value.strip():
+            raise ValueError("Name cannot have leading or trailing spaces.")
+
+        # Проверяем, что после удаления пробелов строка не пустая
+        if not value.strip():
+            raise ValueError("Name cannot be empty or contain only spaces.")
+
         return value
 
     @validator("contact_name")
     def validate_contact_name(cls, value):
-        if value is None:
-            return value
-        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
-        if not re.match(pattern, value):
+        if not value.strip():
             raise ValueError(
-                "Contact name must contain only letters, digits, and spaces."
-            )
+                "Contact name cannot be empty or contain only spaces.")
+
+        # Проверяем на пробелы в начале или конце
+        if value != value.strip():
+            raise ValueError(
+                "Contact name cannot have leading or trailing spaces.")
+
         return value
 
     @validator("contact_email")
@@ -445,7 +454,7 @@ class WarehouseBase(BaseModel):
     # Имя управляющего склада: необязательное, максимум 100 символов, только буквы
     manager_name: Optional[constr(max_length=100)] = None
     # Вместимость склада: обязательное, положительное целое число
-    capacity: conint(gt=0)
+    capacity: conint(gt=0, le=2_147_483_647)
     # Текущее количество продуктов: заполняется значением 0, целое число не меньше 0
     current_stock: conint(ge=0)
     # Номер телефона: необязательное, максимум 15 символов, только цифры и символ "+"
@@ -473,18 +482,21 @@ class WarehouseBase(BaseModel):
         if value.strip() == "":
             raise ValueError("Manager name cannot contain only spaces.")
 
-            # Проверка: только буквы и пробелы
-        pattern = r"^[A-Za-zА-Яа-я\s]+$"
-        if not re.match(pattern, value.strip()):
+            # Проверка: только буквы (без пробелов)
+        pattern = r"^[A-Za-zА-Яа-я]+$"
+        if not re.match(pattern, value):
             raise ValueError(
-                "Manager name must contain only letters and spaces.")
+                "Manager name must contain only letters.")
 
         return value
 
     @validator("capacity")
     def validate_capacity(cls, value):
+        max_value = 2_147_483_647
         if value <= 0:
             raise ValueError("Capacity must be a positive integer.")
+        if value > max_value:
+            raise ValueError(f"Capacity must not exceed {max_value}.")
         return value
 
     @validator("current_stock")
@@ -539,7 +551,7 @@ class WarehouseCreate(WarehouseBase):
 class WarehouseUpdate(BaseModel):
     location: Optional[constr(min_length=1, max_length=255)] = None
     manager_name: Optional[constr(max_length=100)] = None
-    capacity: Optional[conint(gt=0)] = None
+    capacity: Optional[conint(gt=0, le=2_147_483_647)] = None
     current_stock: Optional[conint(ge=0)] = None
     contact_number: Optional[constr(max_length=15)] = None
     email: Optional[EmailStr] = None
@@ -562,18 +574,21 @@ class WarehouseUpdate(BaseModel):
         if value.strip() == "":
             raise ValueError("Manager name cannot contain only spaces.")
 
-            # Проверка: только буквы и пробелы
-        pattern = r"^[A-Za-zА-Яа-я\s]+$"
-        if not re.match(pattern, value.strip()):
+            # Проверка: только буквы (без пробелов)
+        pattern = r"^[A-Za-zА-Яа-я]+$"
+        if not re.match(pattern, value):
             raise ValueError(
-                "Manager name must contain only letters and spaces.")
+                "Manager name must contain only letters.")
 
         return value
 
     @validator("capacity")
     def validate_capacity(cls, value):
+        max_value = 2_147_483_647
         if value <= 0:
             raise ValueError("Capacity must be a positive integer.")
+        if value > max_value:
+            raise ValueError(f"Capacity must not exceed {max_value}.")
         return value
 
     @validator("current_stock")
