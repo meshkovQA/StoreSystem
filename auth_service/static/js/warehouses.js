@@ -133,12 +133,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         // Площадь склада (area_size)
-        let areaSize = document.getElementById("add-area-size").value.trim();
-        areaSize = areaSize.replace(',', '.'); // Заменяем запятую на точку
+        let editAreaSize = document.getElementById("edit-area-size").value.trim();
+        editAreaSize = editAreaSize.replace(',', '.'); // Заменяем запятую на точку
 
 
-        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(areaSize) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(areaSize))) {
-            document.getElementById("addAreaSizeError").style.display = 'block';
+        if (editAreaSize && (isNaN(editAreaSize) || parseFloat(editAreaSize) <= 0 || parseFloat(editAreaSize) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(editAreaSize))) {
+            document.getElementById("editAreaSizeError").style.display = 'block';
             valid = false;
         }
 
@@ -230,12 +230,12 @@ async function openEditWarehouseModal(warehouseId) {
     document.getElementById("edit-warehouse-id").value = warehouse.warehouse_id;
     document.getElementById("edit-location").value = warehouse.location;
     document.getElementById("edit-manager-name").value = warehouse.manager_name || "";
-    document.getElementById("edit-capacity").value = warehouse.capacity + " куб.м";
+    document.getElementById("edit-capacity").value = warehouse.capacity;
     document.getElementById("edit-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("edit-contact-number").value = warehouse.contact_number || "";
     document.getElementById("edit-email").value = warehouse.email || "";
-    document.getElementById("edit-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("edit-area-size").value = warehouse.area_size + " кв.м" || "";
+    document.getElementById("edit-is-active").value = warehouse.is_active ? "active" : "inactive";
+    document.getElementById("edit-area-size").value = warehouse.area_size || "";
 
     // Открываем модальное окно для редактирования
     $("#editWarehouseModal").modal("show");
@@ -322,18 +322,33 @@ async function updateWarehouse(warehouseId) {
         area_size: parseFloat(document.getElementById("edit-area-size").value.trim()) || null,
     };
 
-    await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(warehouseData)
-    });
+    try {
+        const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(warehouseData)
+        });
 
-    // Закрываем модальное окно и обновляем список складов
-    $("#editWarehouseModal").modal("hide");
-    loadWarehouses(token);
+        if (response.ok) {
+            // Закрываем модальное окно и обновляем список складов
+            $("#editWarehouseModal").modal("hide");
+            await loadWarehouses(token);
+            showNotification("Склад успешно обновлен!");
+        } else {
+            const errorData = await response.json();
+            let errorMessage = "Ошибка при обновлении склада";
+            if (errorData.detail) {
+                errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+            }
+            showNotification(errorMessage, "danger", 5000);
+        }
+    } catch (error) {
+        console.error("Ошибка при выполнении запроса:", error);
+        showNotification("Ошибка при обновлении склада", "danger");
+    }
 }
 
 // Удаление склада
