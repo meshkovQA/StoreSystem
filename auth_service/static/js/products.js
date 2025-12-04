@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         let weight = document.getElementById("add-weight").value;
         weight = weight.replace(',', '.'); // Заменяем запятую на точку
         if (weight) {
-            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
+            if (!/^\d{1,8}\.\d{2}$/.test(weight) || parseFloat(weight) <= 0) {
                 console.log("Invalid weight input");  // Лог ошибки веса
                 document.getElementById("weightError").style.display = 'block';
                 valid = false;
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         let weight = document.getElementById("edit-weight").value;
         weight = weight.replace(',', '.'); // Заменяем запятую на точку
         if (weight) {
-            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
+            if (!/^\d{1,8}\.\d{2}$/.test(weight) || parseFloat(weight) <= 0) {
                 console.log("Invalid weight input");  // Лог ошибки веса
                 document.getElementById("editweightError").style.display = 'block';
                 valid = false;
