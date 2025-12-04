@@ -77,9 +77,9 @@
                     </div>
                     <div class="mb-3">
                         <label for="add-area-size" class="form-label">Площадь (кв.м)</label>
-                        <input type="number" class="form-control" id="add-area-size" placeholder="Введите площадь склада">
+                        <input type="text" class="form-control" id="add-area-size" placeholder="Введите площадь склада (например: 100.25)">
                         <small id="addAreaSizeError" class="text-danger" style="display: none;">
-                            Должно быть положительным числом в формате 1.25.
+                            Должно быть положительным числом с двумя знаками после точки.
                         </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Создать склад</button>
@@ -151,9 +151,9 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit-area-size" class="form-label">Площадь (кв.м)</label>
-                        <input type="number" class="form-control" id="edit-area-size">
+                        <input type="text" class="form-control" id="edit-area-size" placeholder="Введите площадь склада (например: 100.25)">
                         <small id="editAreaSizeError" class="text-danger" style="display: none;">
-                            Должно быть положительным числом в формате 1.25.
+                            Должно быть положительным числом с двумя знаками после точки.
                         </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
