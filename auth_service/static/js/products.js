@@ -510,6 +510,19 @@ async function searchProduct() {
 
 async function openProductDetailsModal(productId) {
     const token = await getTokenFromDatabase();
+
+    // Удаляем существующее модальное окно, если оно есть
+    const existingModal = document.getElementById("productDetailsModal");
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Удаляем backdrop, если остался
+    const existingBackdrop = document.querySelector(".modal-backdrop");
+    if (existingBackdrop) {
+        existingBackdrop.remove();
+    }
+
     const response = await fetch(`http://localhost:8002/products/${productId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -559,10 +572,12 @@ async function openProductDetailsModal(productId) {
     // Добавляем обработчик события для закрытия модального окна
     productDetailsModalElement.addEventListener("hidden.bs.modal", () => {
         productDetailsModalElement.remove();
-    });
-
-    // Удаляем модальное окно из DOM после закрытия
-    productDetailsModalElement.querySelector(".btn-close").addEventListener("click", () => {
-        productDetailsModal.hide();
+        // Удаляем backdrop после закрытия
+        const backdrop = document.querySelector(".modal-backdrop");
+        if (backdrop) {
+            backdrop.remove();
+        }
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("padding-right");
     });
 }
