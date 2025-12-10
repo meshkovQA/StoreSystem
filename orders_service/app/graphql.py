@@ -219,6 +219,33 @@ class Mutation:
         db = get_db_session(info)
         user_id = get_current_user_id(info)
         logger.log_message(f"User {user_id} is creating a new order")
+
+        # Получаем токен для запроса к products_service
+        request = info.context.get("request")
+        auth_header = request.headers.get("Authorization")
+        _, _, token = auth_header.partition(" ")
+
+        # Проверяем цены продуктов
+        for item in input.order_items:
+            actual_price = auth.get_product_price(str(item.product_id), token)
+            if Decimal(str(item.price_at_order)) != actual_price:
+                logger.log_message(
+                    f"Price mismatch for product {item.product_id}: "
+                    f"expected {actual_price}, got {item.price_at_order}"
+                )
+                # Отправляем событие OrderRejected в Kafka
+                order_rejected_event = {
+                    "event_type": "OrderRejected",
+                    "user_id": str(user_id),
+                    "reason": f"Некорректная цена товара {item.product_id}: ожидалось {actual_price}, получено {item.price_at_order}",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                send_to_kafka('orders', order_rejected_event)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Некорректная цена товара: ожидалось {actual_price}, получено {item.price_at_order}"
+                )
+
         # Используем функцию из crud.py
         order_data = OrderCreate(
             user_id=user_id,
@@ -272,13 +299,20 @@ class Mutation:
     @strawberry.mutation
     def update_order_status(self, info: Info, input: UpdateOrderStatusInput) -> OrderType:
         db = get_db_session(info)
-        user_id = get_current_user_id(info)
         order = get_order_by_id_crud(db, input.order_id)
         if not order:
             raise Exception("Заказ не найден")
 
+        # Получаем данные пользователя включая is_superadmin
+        request = info.context.get("request")
+        auth_header = request.headers.get("Authorization")
+        scheme, _, token = auth_header.partition(" ")
+        user_data = auth.verify_token_in_other_service(token)
+        user_id = UUID(user_data.get("user_id"))
+        is_superadmin = user_data.get("is_superadmin", False)
+
         # Проверяем, имеет ли пользователь право обновлять этот заказ
-        if order.user_id != user_id:
+        if not is_superadmin and order.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для обновления этого заказа")
 

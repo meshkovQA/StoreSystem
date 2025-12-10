@@ -119,8 +119,10 @@ async function createChat(event) {
 
         // Закрываем модалку
         const modalEl = document.getElementById('createChatModal');
-        const bsModal = bootstrap.Modal.getInstance(modalEl);
-        bsModal.hide();
+        const bsModal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        if (bsModal) {
+            bsModal.hide();
+        }
 
         // Можно обновить список чатов в UI (если есть функция refreshChatList())
         // await refreshChatList(); 
@@ -192,8 +194,10 @@ async function addParticipantsToChat(event) {
 
     // Закрываем модалку
     const modalEl = document.getElementById('addParticipantsModal');
-    const bsModal = bootstrap.Modal.getInstance(modalEl);
-    bsModal.hide();
+    const bsModal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+    if (bsModal) {
+        bsModal.hide();
+    }
 
     alert('Участники добавлены в чат!');
 }
