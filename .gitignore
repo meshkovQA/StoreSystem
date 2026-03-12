@@ -1,4 +1,4 @@
 /my_env
+/logs
 /docker-data
-/products_service/logs/products_service.log
-/auth_service/logs/auth.log
+/.claude
