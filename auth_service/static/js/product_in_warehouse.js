@@ -37,7 +37,7 @@ function getWarehouseIdFromUrl() {
 // Функция для загрузки информации о складе
 async function loadWarehouseInfo(warehouseId) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/warehouses/${warehouseId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -65,7 +65,7 @@ async function loadWarehouseInfo(warehouseId) {
 // Функция для загрузки продуктов на складе с учетом пагинации
 async function loadProducts(warehouseId, page = 1) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${warehouseId}?page=${page}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses/${warehouseId}?page=${page}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -123,7 +123,7 @@ async function addProductToWarehouse(warehouseId) {
     const productId = document.getElementById("product-id").value;
     const quantity = parseInt(document.getElementById("product-quantity").value);
 
-    const response = await fetch(`http://localhost:8002/productinwarehouses?warehouse_id=${warehouseId}&product_id=${productId}&quantity=${quantity}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses?warehouse_id=${warehouseId}&product_id=${productId}&quantity=${quantity}`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -164,7 +164,7 @@ function openEditProductModal(productWarehouseId) {
 // Обновление количества продукта на складе
 async function updateProductQuantity(productWarehouseId, quantity) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${productWarehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses/${productWarehouseId}`, {
         method: "PUT",
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -187,7 +187,7 @@ async function deleteProduct(productWarehouseId) {
     if (!confirmed) return;
 
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${productWarehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses/${productWarehouseId}`, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`,

@@ -222,7 +222,7 @@ function openAddModal() {
 // Открытие модального окна для редактирования поставщика
 async function openEditModal(supplierId) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/suppliers/${supplierId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -254,7 +254,7 @@ async function initializeSuppliers() {
 
 //Загрузка поставщиков
 async function loadSuppliers(token) {
-    const response = await fetch("http://localhost:8002/suppliers/", {
+    const response = await fetch(`http://${window.location.hostname}:8002/suppliers/`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -270,7 +270,7 @@ async function searchSupplier() {
     const token = await getTokenFromDatabase();
     const searchQuery = document.getElementById("search-name").value.trim();
 
-    const response = await fetch(`http://localhost:8002/search_suppliers?name=${encodeURIComponent(searchQuery)}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/search_suppliers?name=${encodeURIComponent(searchQuery)}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -302,7 +302,7 @@ async function createSupplier() {
 
 
     try {
-        const response = await fetch("http://localhost:8002/suppliers/", {
+        const response = await fetch(`http://${window.location.hostname}:8002/suppliers/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -349,7 +349,7 @@ async function updateSupplier(supplierId) {
         website: document.getElementById("edit-website").value.trim() || null,
     };
 
-    await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+    await fetch(`http://${window.location.hostname}:8002/suppliers/${supplierId}`, {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
@@ -366,7 +366,7 @@ async function updateSupplier(supplierId) {
 //Удаление поставщика
 async function deleteSupplier(supplierId) {
     const token = await getTokenFromDatabase();
-    await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+    await fetch(`http://${window.location.hostname}:8002/suppliers/${supplierId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
     });

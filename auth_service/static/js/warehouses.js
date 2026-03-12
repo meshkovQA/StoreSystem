@@ -186,7 +186,7 @@ function showNotification(message, type = "success", duration = 3000) {
 // Открытие модального окна для просмотра информации о складе
 async function openViewWarehouseModal(warehouseId) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/warehouses/${warehouseId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -218,7 +218,7 @@ function openAddWarehouseModal() {
 // Открытие модального окна для редактирования склада
 async function openEditWarehouseModal(warehouseId) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/warehouses/${warehouseId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -250,7 +250,7 @@ async function initializeWarehouses() {
 
 // Загрузка складов
 async function loadWarehouses(token) {
-    const response = await fetch("http://localhost:8002/warehouses/", {
+    const response = await fetch(`http://${window.location.hostname}:8002/warehouses/`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -276,7 +276,7 @@ async function createWarehouse() {
     };
 
     try {
-        const response = await fetch("http://localhost:8002/warehouses/", {
+        const response = await fetch(`http://${window.location.hostname}:8002/warehouses/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -323,7 +323,7 @@ async function updateWarehouse(warehouseId) {
         area_size: parseFloat(document.getElementById("edit-area-size").value.trim()) || null,
     };
 
-    await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+    await fetch(`http://${window.location.hostname}:8002/warehouses/${warehouseId}`, {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
@@ -340,7 +340,7 @@ async function updateWarehouse(warehouseId) {
 // Удаление склада
 async function deleteWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
-    await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+    await fetch(`http://${window.location.hostname}:8002/warehouses/${warehouseId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
     });

@@ -63,7 +63,7 @@ async function approveProduct(productId) {
     const token = await getTokenFromDatabase();
 
     try {
-        const response = await fetch(`http://localhost:8002/products/${productId}`, {
+        const response = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
