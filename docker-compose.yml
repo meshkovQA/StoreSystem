@@ -28,7 +28,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1GB
+          memory: 2GB
         reservations:
           cpus: '1'
           memory: 1GB
@@ -67,8 +67,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512MB
+          cpus: '1'
+          memory: 1500MB
       restart_policy:
         condition: on-failure
         max_attempts: 3
@@ -102,7 +102,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512MB
+          memory: 1GB
       restart_policy:
         condition: on-failure
         max_attempts: 3
@@ -141,8 +141,8 @@ services:
       mode: global
       resources:
         limits:
-          cpus: '0.2'
-          memory: 512MB
+          cpus: '0.5'
+          memory: 1GB
       restart_policy:
         condition: on-failure
         max_attempts: 3
