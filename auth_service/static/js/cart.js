@@ -26,7 +26,7 @@ function renderCart() {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
-        const imageHost = "http://localhost:8002";
+        const imageHost = "http://${window.location.hostname}:8002";
 
         cartContainer.innerHTML += `
             <div class="col-md-12 mb-3">
@@ -116,7 +116,7 @@ async function checkout() {
 
     const variables = { input: { orderItems } };
 
-    const response = await fetch("http://localhost:8003/graphql", {
+    const response = await fetch(`http://${window.location.hostname}:8003/graphql`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,

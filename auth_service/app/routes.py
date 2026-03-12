@@ -382,7 +382,7 @@ def get_pending_products(
                 },
                 timeout=5
             )
-            logger.log_message(f"""Making request to http://localhost:8002/products/{
+            logger.log_message(f"""Making request to http://products_service:8000/products/{
                                product_id} with headers: {{'Authorization': 'Bearer {token}', 'Content-Type': 'application/json'}}""")
             if response.status_code == 200:
                 products_data.append(response.json())

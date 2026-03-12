@@ -100,7 +100,7 @@ async function createChat(event) {
     };
 
     try {
-        const response = await fetch('http://localhost:8004/chats/', {
+        const response = await fetch(`http://${window.location.hostname}:8004/chats/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ async function openAddParticipantsModal(chatId) {
 
     let currentParticipantIds = [];
     try {
-        const resp = await fetch(`http://localhost:8004/chats/${chatId}`, {
+        const resp = await fetch(`http://${window.location.hostname}:8004/chats/${chatId}`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
@@ -200,7 +200,7 @@ async function addParticipantsToChat(event) {
 
 async function addOneUserToChat(chatId, userId) {
     // PATCH /chats/add_user?chat_id=...&user_id=...
-    const url = `http://localhost:8004/chats/add_user?chat_id=${chatId}&user_id=${userId}`;
+    const url = `http://${window.location.hostname}:8004/chats/add_user?chat_id=${chatId}&user_id=${userId}`;
     try {
         const response = await fetch(url, {
             method: 'PATCH',

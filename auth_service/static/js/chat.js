@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Функция запроса списка чатов (REST GET /chats/)
 async function fetchChats(token) {
     try {
-        const response = await fetch('http://localhost:8004/chats/', {
+        const response = await fetch(`http://${window.location.hostname}:8004/chats/`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
@@ -120,7 +120,7 @@ async function openChat(chatId, chatName) {
 
 
     // Создаём новое соединение
-    const wsUrl = `ws://localhost:8004/ws/${chatId}/${userId}`;
+    const wsUrl = `ws://${window.location.hostname}:8004/ws/${chatId}/${userId}`;
     console.log(`[WS] Подключаемся к: ${wsUrl}`);
     currentChatWebSocket = new WebSocket(wsUrl);
 
@@ -204,7 +204,7 @@ function updateBubbleName(messageId, newName) {
 loadHistoryBtn.addEventListener('click', async () => {
     if (!currentChatId) return;
     try {
-        const response = await fetch(`http://localhost:8004/chats/${currentChatId}/messages`, {
+        const response = await fetch(`http://${window.location.hostname}:8004/chats/${currentChatId}/messages`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
