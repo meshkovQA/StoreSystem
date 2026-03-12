@@ -80,7 +80,7 @@ let products = [];
 // ---- Загрузка складов ----
 async function loadWarehouses(token) {
     try {
-        const response = await fetch("http://localhost:8002/warehouses/", {
+        const response = await fetch(`http://${window.location.hostname}:8002/warehouses/`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -100,7 +100,7 @@ async function loadWarehouses(token) {
 
 // ---- Поиск по складу ----
 async function searchProductsInWarehouse(warehouseId, query, token) {
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${warehouseId}/products?name=${encodeURIComponent(query)}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses/${warehouseId}/products?name=${encodeURIComponent(query)}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -135,7 +135,7 @@ async function searchProductsInWarehouse(warehouseId, query, token) {
 
 // ---- Фильтрация по складу ----
 async function filterProductsByWarehouse(warehouseId, filters, token) {
-    let url = `http://localhost:8002/productinwarehouses/${warehouseId}/products?`;
+    let url = `http://${window.location.hostname}:8002/productinwarehouses/${warehouseId}/products?`;
 
     if (filters.minPrice) {
         url += `min_price=${filters.minPrice}&`;
@@ -197,7 +197,7 @@ function renderWarehousesTable(warehouses) {
 
 // ---- Получение информации о продукте ----
 async function fetchProductDetails(productId, token) {
-    const response = await fetch(`http://localhost:8002/products/${productId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -216,7 +216,7 @@ async function fetchProductDetails(productId, token) {
 
 // ---- Получение продуктов со склада ----
 async function fetchProductsFromWarehouse(warehouseId, token) {
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${warehouseId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/productinwarehouses/${warehouseId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"

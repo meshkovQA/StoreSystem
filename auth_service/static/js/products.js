@@ -252,7 +252,7 @@ function openAddProductModal() {
 
 async function openEditProductModal(productId) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/products/${productId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -286,7 +286,7 @@ async function initializeProducts() {
 }
 
 async function loadProducts(token) {
-    const response = await fetch("http://localhost:8002/products/", {
+    const response = await fetch(`http://${window.location.hostname}:8002/products/`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -303,7 +303,7 @@ async function uploadImage(imageFile) {
     formData.append("file", imageFile);
     console.log("Форма данных для загрузки изображения:", formData);
 
-    const response = await fetch("http://localhost:8002/upload", {
+    const response = await fetch(`http://${window.location.hostname}:8002/upload`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`
@@ -353,7 +353,7 @@ async function createProduct() {
     };
 
     try {
-        const response = await fetch("http://localhost:8002/products/", {
+        const response = await fetch(`http://${window.location.hostname}:8002/products/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -414,7 +414,7 @@ async function updateProduct(productId) {
         manufacturer: document.getElementById("edit-manufacturer").value.trim() || null,
     };
 
-    await fetch(`http://localhost:8002/products/${productId}`, {
+    await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -429,7 +429,7 @@ async function updateProduct(productId) {
 
 async function deleteProduct(productId) {
     const token = await getTokenFromDatabase();
-    await fetch(`http://localhost:8002/products/${productId}`, {
+    await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
     });
@@ -468,7 +468,7 @@ function renderProductsTable(products) {
 
 async function loadSuppliers(selectorId, selectedSupplierId = null) {
     const token = await getTokenFromDatabase();
-    const response = await fetch("http://localhost:8002/suppliers/", {
+    const response = await fetch(`http://${window.location.hostname}:8002/suppliers/`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -493,7 +493,7 @@ async function searchProduct() {
     const token = await getTokenFromDatabase();
     const searchQuery = document.getElementById("search-name").value.trim();
 
-    const response = await fetch(`http://localhost:8002/search_products/?name=${encodeURIComponent(searchQuery)}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/search_products/?name=${encodeURIComponent(searchQuery)}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -523,7 +523,7 @@ async function openProductDetailsModal(productId) {
         existingBackdrop.remove();
     }
 
-    const response = await fetch(`http://localhost:8002/products/${productId}`, {
+    const response = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"

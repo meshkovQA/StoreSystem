@@ -65,7 +65,7 @@ async function approveProduct(productId) {
 
     try {
         // Одобряем продукт (PATCH-запрос)
-        const patchResponse = await fetch(`http://localhost:8002/products/${productId}`, {
+        const patchResponse = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -123,7 +123,7 @@ async function rejectProduct(productId) {
         }
 
         // Удаляем продукт из базы данных
-        const dbResponse = await fetch(`http://localhost:8002/products/${productId}`, {
+        const dbResponse = await fetch(`http://${window.location.hostname}:8002/products/${productId}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,

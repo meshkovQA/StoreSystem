@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     `;
 
     try {
-        const response = await fetch("http://localhost:8003/graphql", {
+        const response = await fetch(`http://${window.location.hostname}:8003/graphql`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -118,7 +118,7 @@ async function cancelOrder(orderId) {
     `;
 
     try {
-        const response = await fetch("http://localhost:8003/graphql", {
+        const response = await fetch(`http://${window.location.hostname}:8003/graphql`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,

@@ -110,7 +110,7 @@ async function checkout() {
 
     const variables = { input: { orderItems } };
 
-    const response = await fetch("http://localhost:8003/graphql", {
+    const response = await fetch(`http://${window.location.hostname}:8003/graphql`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
