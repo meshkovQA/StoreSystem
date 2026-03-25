@@ -22,7 +22,7 @@ class UserCreate(BaseModel):
         return value
 
     @validator("password")
-    def validate_name(cls, value):
+    def validate_password(cls, value):
         # Регулярное выражение для проверки: минимум 3 символа, без строк из пробелов или начальных пробелов
         pattern = r'^(?!\s*$)(?!\s).{3,50}$'
         if not re.match(pattern, value):
